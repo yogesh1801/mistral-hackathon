@@ -1,5 +1,6 @@
 # 🚀 ASCII Tanks — Teaching LLMs Physics
 
+![ASCII Tanks Battle Demo](battle_videos/demo.gif)
 ## 🎮 What is ASCII Tanks?
 ASCII Tanks is a fully terminal-based, API-driven artillery game (inspired by Scorched Earth / Worms) where LLMs battle each other using purely ASCII visuals and JSON payloads! 
 
@@ -33,7 +34,7 @@ To teach the 3B model this intricate spatial reasoning without relying on expens
    - **Continuous Physics Reward**: A gradient from -5.0 to +11.0 based on how close the simulated shot landed to the enemy tank.
 3. **Training**: Using TRL and Unsloth, we trained **Ministral 3B** with LoRA. Because GRPO generates multiple candidate actions per state and uses relative ranking, the model slowly internalized the physics relationships directly from the simulated rewards.
 
-The result is a tiny model that develops genuine spatial intuition entirely through reinforcement learning! You can view the full training metrics in our [**Weights & Biases (WandB) Logs**](https://api.wandb.ai/links/yogeshsingla481-student/o687x6xm).
+The result is a tiny model that develops genuine spatial intuition entirely through reinforcement learning! You can view the full training metrics in our [**Weights & Biases (WandB) Logs**](https://api.wandb.ai/links/yogeshsingla481-student/o687x6xm) and download the final merged model on [**Hugging Face**](https://huggingface.co/yogesh1801/ministral-3b-grpo-ascii-tanks-merged).
 
 ## 🏆 Results After Fine-Tuning
 After fine-tuning via GRPO, we ran the same head-to-head battle between the **fine-tuned Ministral 3B** and the baseline **Mistral Small**.

@@ -22,7 +22,7 @@ For a detailed turn-by-turn breakdown, see [`battle_logs/unfinetuned_llm_battle.
 ### 🎥 Unfinetuned Battle Video
 Watch the unfinetuned models battle:
 
-<video controls src="battle_videos/unfinetuned_llm_battle.mp4" width="100%"></video>
+https://github.com/yogesh1801/mistral-hackathon/raw/main/battle_videos/unfinetuned_llm_battle.mp4
 
 *(If the video doesn't load automatically, please check the [`battle_videos/unfinetuned_llm_battle.mp4`](battle_videos/unfinetuned_llm_battle.mp4) file directly)*
 
@@ -53,7 +53,7 @@ The 3B model learned to accurately estimate distances, calculate parabolic traje
 ### 🎥 Fine-Tuned Battle Video
 Watch the fine-tuned Ministral 3B demonstrate its learned aiming accuracy:
 
-<video controls src="battle_videos/finetuned_llm_battle.mp4" width="100%"></video>
+https://github.com/yogesh1801/mistral-hackathon/raw/main/battle_videos/finetuned_llm_battle.mp4
 
 *(If the video doesn't load automatically, please check the [`battle_videos/finetuned_llm_battle.mp4`](battle_videos/finetuned_llm_battle.mp4) file directly)*
 

@@ -20,11 +20,7 @@ Over a 20-match series, the baseline results were:
 For a detailed turn-by-turn breakdown, see [`battle_logs/unfinetuned_llm_battle.log`](battle_logs/unfinetuned_llm_battle.log). Complete result metrics are tracked in [`battle_results/unfinetuned_llm_battle_results.csv`](battle_results/unfinetuned_llm_battle_results.csv).
 
 ### 🎥 Unfinetuned Battle Video
-Watch the unfinetuned models battle:
-
-<video src="https://github.com/yogesh1801/mistral-hackathon/raw/main/battle_videos/unfinetuned_llm_battle.mp4" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px"></video>
-
-*(If the video doesn't load automatically, please check the [`battle_videos/unfinetuned_llm_battle.mp4`](battle_videos/unfinetuned_llm_battle.mp4) file directly)*
+[![Unfinetuned Battle](https://img.youtube.com/vi/sW0km0QSwqc/maxresdefault.jpg)](https://youtu.be/sW0km0QSwqc)
 
 ## 🧠 Our Moat: Deep Spatial Intuition from Pure Text
 Our unique innovation—and **our biggest moat**—is that **we strictly rely on text models, using zero visual or multi-modal capabilities.** The models are fed the raw ASCII representation of the game directly as a prompt. They must learn to "see" a 2D grid of characters, understand column alignments, calculate trajectories, and derive spatial relationships entirely from text tokens!
@@ -51,11 +47,11 @@ In the new 20-match series, the results improved dramatically:
 The 3B model learned to accurately estimate distances, calculate parabolic trajectories, and directly hit targets, matching the win rate of a model significantly larger than itself! Dive into the logs in [`battle_logs/finetuned_llm_battle.log`](battle_logs/finetuned_llm_battle.log) and the full summary in [`battle_results/finetuned_llm_battle_results.csv`](battle_results/finetuned_llm_battle_results.csv).
 
 ### 🎥 Fine-Tuned Battle Video
-Watch the fine-tuned Ministral 3B demonstrate its learned aiming accuracy:
+[![Fine-Tuned Battle](https://img.youtube.com/vi/N7ZPVb0ZoqQ/maxresdefault.jpg)](https://youtu.be/N7ZPVb0ZoqQ)
 
-<video src="https://github.com/yogesh1801/mistral-hackathon/raw/main/battle_videos/finetuned_llm_battle.mp4" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px"></video>
-
-*(If the video doesn't load automatically, please check the [`battle_videos/finetuned_llm_battle.mp4`](battle_videos/finetuned_llm_battle.mp4) file directly)*
+## 👥 Contributors
+- **Yogesh Singla** — [@yogesh1801](https://github.com/yogesh1801)
+- **Simran Srivastava** — [@dcube0710](https://github.com/dcube0710)
 
 ---
 <p align="center">

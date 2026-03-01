@@ -1,255 +1,63 @@
-# 🚀 ASCII Tanks — Teaching LLMs Physics Through Combat
+# 🚀 ASCII Tanks — Teaching LLMs Physics
 
-> **Can a 3B parameter model learn to aim?** We used GRPO reinforcement learning with an offline physics simulator to teach Ministral 3B spatial reasoning — no labeled data, no human feedback, just raw trajectory math.
+## 🎮 What is ASCII Tanks?
+ASCII Tanks is a fully terminal-based, API-driven artillery game (inspired by Scorched Earth / Worms) where LLMs battle each other using purely ASCII visuals and JSON payloads! 
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)](https://python.org)
-[![Mistral AI](https://img.shields.io/badge/Mistral_AI-Powered-orange?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+)](https://mistral.ai)
-[![HuggingFace](https://img.shields.io/badge/🤗_Model-yogesh1801/ministral--3b--grpo--ascii--tanks-yellow)](https://huggingface.co/yogesh1801/ministral-3b-grpo-ascii-tanks-merged)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+It features destructible terrain, a physics engine for trajectory simulation, and lives entirely in your terminal with live ANSI streaming (like `parrot.live`). It was built specifically to test and fine-tune the spatial reasoning of Large Language Models. The models "see" the game through a compact text endpoint and respond with JSON coordinate actions containing the `move`, `angle`, and `power`.
 
----
+For more details on the game mechanics, setup, and API, please refer to the [ASCII Tanks Details](docs/ASCII_TANKS.md).
 
-## 🌟 Overview
+## ⚔️ The Baseline: A Struggle with Space
+Initially, we pitted the baseline **Ministral 3B** against the much larger **Mistral Small** model without any fine-tuning. 
+Since text-based LLMs naturally struggle with spatial and physics-based reasoning, it was no surprise that the smaller model struggled to calculate accurate projectile trajectories or consistently hit targets compared to its larger counterpart.
 
-**ASCII Tanks** is a terminal-based artillery game where two Mistral LLMs battle each other on a destructible ASCII battlefield. One model fires projectiles at the other by reasoning about angle, power, and distance — all from a text-only view of the game state.
+### 📊 Results (No Fine-Tuning)
+Over a 20-match series, the baseline results were:
+- **Mistral Small**: 15 Wins
+- **Ministral 3B**: 4 Wins
+- **Draws**: 1
 
-The real innovation isn't the game — it's the **training pipeline**. We fine-tuned **Ministral 3B** using **GRPO (Group Relative Policy Optimization)** with a custom offline physics simulator as the reward function. The model learns to aim not from human demonstrations, but by simulating thousands of trajectories and receiving reward signals based on how close its shots land to the enemy.
+For a detailed turn-by-turn breakdown, see [`battle_logs/unfinetuned_llm_battle.log`](battle_logs/unfinetuned_llm_battle.log). Complete result metrics are tracked in [`battle_results/unfinetuned_llm_battle_results.csv`](battle_results/unfinetuned_llm_battle_results.csv).
 
-**The result:** A tiny 3B model that develops genuine spatial intuition — understanding angles, parabolic trajectories, and distance estimation — purely through reinforcement learning.
+### 🎥 Unfinetuned Battle Video
+Watch the unfinetuned models battle:
 
----
+<video controls src="battle_videos/unfinetuned_llm_battle.mp4" width="100%"></video>
 
-## ❗ Problem
+*(If the video doesn't load automatically, please check the [`battle_videos/unfinetuned_llm_battle.mp4`](battle_videos/unfinetuned_llm_battle.mp4) file directly)*
 
-Large Language Models are powerful reasoners, but they notoriously struggle with **spatial and physics-based reasoning**. Ask an LLM to estimate a projectile trajectory or calculate the right angle to hit a target, and it will often hallucinate plausible-sounding but physically incorrect answers.
+## 🧠 Our Moat: Deep Spatial Intuition from Pure Text
+Our unique innovation—and **our biggest moat**—is that **we strictly rely on text models, using zero visual or multi-modal capabilities.** The models are fed the raw ASCII representation of the game directly as a prompt. They must learn to "see" a 2D grid of characters, understand column alignments, calculate trajectories, and derive spatial relationships entirely from text tokens!
 
-Current approaches to improving spatial reasoning rely on:
-- Expensive human-labeled datasets
-- Supervised fine-tuning on curated examples (which caps performance at human-level)
-- Large models (70B+) that are impractical for edge deployment
+To teach the 3B model this intricate spatial reasoning without relying on expensive human-labeled data or visual inputs, we used **GRPO (Group Relative Policy Optimization)** paired with an **offline physics simulator**. 
 
-**The core question:** Can we teach a small model to reason about physics — without any labeled data at all?
+1. **Dataset Generation**: We ran `generate_dataset.py` to produce thousands of randomized game states (varying terrain and tank positions) and extracted the compact ASCII state alongside the hidden "game_data" used for simulation. You can explore the data we generated here: [**ASCII Tanks Offline Dataset on HuggingFace**](https://huggingface.co/datasets/yogesh1801/ascii-tanks-offline-dataset).
+2. **Offline Reward Function**: Instead of playing the game live, the GRPO reward function (`grpo_rewards.py`) evaluates candidate actions by simulating the full projectile trajectory offline. The reward signal combines:
+   - **Structural Reward**: +1.0 for valid JSON output.
+   - **Continuous Physics Reward**: A gradient from -5.0 to +11.0 based on how close the simulated shot landed to the enemy tank.
+3. **Training**: Using TRL and Unsloth, we trained **Ministral 3B** with LoRA. Because GRPO generates multiple candidate actions per state and uses relative ranking, the model slowly internalized the physics relationships directly from the simulated rewards.
 
----
+The result is a tiny model that develops genuine spatial intuition entirely through reinforcement learning! You can view the full training metrics in our [**Weights & Biases (WandB) Logs**](https://api.wandb.ai/links/yogeshsingla481-student/o687x6xm).
 
-## 💡 Solution
+## 🏆 Results After Fine-Tuning
+After fine-tuning via GRPO, we ran the same head-to-head battle between the **fine-tuned Ministral 3B** and the baseline **Mistral Small**.
 
-We built an end-to-end pipeline that turns a game into a training environment:
+### 📊 Fine-Tuned Results
+In the new 20-match series, the results improved dramatically:
+- **Mistral Small**: 10 Wins
+- **Ministral 3B (Fine-Tuned)**: 10 Wins 
+- **Draws**: 0
 
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐
-│  Game Engine    │────▶│  Dataset Generator───▶│  GRPO Trainer       │
-│  (server.py)    │     │  1000+ random    │     │  Unsloth + LoRA     │
-│  Physics + API  │     │  game states     │     │  on Ministral 3B    │
-└─────────────────┘     └──────────────────┘     └──────────┬──────────┘
-                                                            │
-                         ┌──────────────────┐               │
-                         │  Reward Functions│◀─────────────┘
-                         │  • Format check  │  Model generates actions
-                         │  • Offline physics  Reward = f(trajectory)
-                         │    simulation    │
-                         └──────────────────┘
-```
+The 3B model learned to accurately estimate distances, calculate parabolic trajectories, and directly hit targets, matching the win rate of a model significantly larger than itself! Dive into the logs in [`battle_logs/finetuned_llm_battle.log`](battle_logs/finetuned_llm_battle.log) and the full summary in [`battle_results/finetuned_llm_battle_results.csv`](battle_results/finetuned_llm_battle_results.csv).
 
-1. **Game Engine** — A fully functional ASCII artillery game with destructible terrain, projectile physics, and a REST API
-2. **Dataset Generator** — Produces thousands of randomized game states (varied terrain, positions, distances)
-3. **Offline Physics Reward** — Instead of playing the game live, we simulate the projectile trajectory offline and compute reward based on proximity to the enemy
-4. **GRPO Training** — The model generates multiple candidate actions per state; the reward function scores them; the model learns from the relative ranking — no labels needed
+### 🎥 Fine-Tuned Battle Video
+Watch the fine-tuned Ministral 3B demonstrate its learned aiming accuracy:
 
-After training, we pit the fine-tuned Ministral 3B against the much larger **Mistral Small** in live head-to-head matches.
+<video controls src="battle_videos/finetuned_llm_battle.mp4" width="100%"></video>
 
----
-
-## 🧠 Key Features
-
-- **🎮 Full Game Engine** — 80-column ASCII battlefield with rolling hills, destructible terrain via crater physics, tank movement with fuel economy, and ANSI-colored live streaming (`curl -N localhost:3001/stream`)
-
-- **🧪 Offline Physics Reward Function** — The GRPO reward function doesn't call the game server. It runs a complete offline trajectory simulation (gravity, sub-steps, collision detection) to evaluate each candidate action in milliseconds — enabling large-batch RL training
-
-- **📊 Dual Reward Signal** — Combines structural reward (valid JSON output → +1.0) with a continuous physics reward (distance-to-enemy gradient from −5.0 to +11.0), giving the model both format and strategy learning signals
-
-- **🔄 Zero-Shot Transfer** — The model is trained on random isolated states but deployed in multi-turn live battles with conversation history, hit/miss feedback, and adaptive opponents — and it generalizes
-
-- **📡 LLM-Native API Design** — The game exposes a compact ASCII endpoint specifically optimized for LLM context windows, with column rulers for spatial reference and minimal token overhead
-
-- **⚔️ Live Battle Framework** — Automated multi-match orchestration with conversation history management, shot feedback loops (hit/miss + direction), and CSV result tracking with a live ANSI leaderboard
+*(If the video doesn't load automatically, please check the [`battle_videos/finetuned_llm_battle.mp4`](battle_videos/finetuned_llm_battle.mp4) file directly)*
 
 ---
-
-## 🏗️ Architecture
-
-```
-                        ┌──────────────────────────────────┐
-                        │         ASCII Tanks Server       │
-                        │          (server.py)             │
-                        │                                  │
-                        │  • Terrain generation (sin wave) │
-                        │  • Projectile physics engine     │
-                        │  • ANSI frame renderer           │
-                        │  • Flask REST API                │
-                        └──────┬───────────┬───────────────┘
-                               │           │
-              ┌────────────────▼──┐   ┌────▼────────────────┐
-              │  /api/ascii/compact   │  /api/fire          │
-              │  /api/stats       │   │  /api/reset         │
-              │  (Game State)     │   │  (Actions)          │
-              └────────┬──────────┘   └────┬────────────────┘
-                       │                   │
-           ┌───────────▼───────────────────▼──────────────┐
-           │           LLM Battle Orchestrator            │
-           │         (llm_battle.py)                      │
-           │                                              │
-           │  Turn loop:                                  │
-           │  1. Fetch game state + ASCII view            │
-           │  2. Build prompt with feedback               │
-           │  3. Call LLM → get {move, angle, power}      │
-           │  4. POST /api/fire → get result              │
-           │  5. Build feedback for next turn             │
-           └──────────┬──────────────┬────────────────────┘
-                      │              │
-            ┌─────────▼────┐  ┌──────▼──────────┐
-            │ Ministral 3B │  │  Mistral Small  │
-            │  (Fine-tuned)│  │  (Baseline API) │
-            └──────────────┘  └─────────────────┘
-
-  ═══════════════ TRAINING PIPELINE ═══════════════
-
-  generate_dataset.py  ──▶  ascii_tanks_grpo_dataset.jsonl
-         │                         │
-         │ Random game states      │ 1000+ scenarios
-         │ with terrain/positions  │ with hidden physics data
-         ▼                         ▼
-  mistral_finetuning.ipynb (Unsloth + GRPO)
-         │
-         │ grpo_rewards.py
-         │  ├─ format_reward_func()    → Valid JSON?
-         │  └─ strategy_succeeds()     → Offline physics sim → reward
-         ▼
-  yogesh1801/ministral-3b-grpo-ascii-tanks (HuggingFace)
-```
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Game Engine** | Python, Flask, ANSI escape codes, threading |
-| **AI / ML** | Mistral AI API (`mistral-small-latest`, `ministral-3b-latest`) |
-| **RL Training** | GRPO via TRL, Unsloth (2× faster LoRA fine-tuning), 16-bit LoRA (rank 32) |
-| **Model Hosting** | HuggingFace Hub, vLLM (OpenAI-compatible serving) |
-| **Dataset** | HuggingFace Datasets, custom offline physics simulator |
-| **Monitoring** | Weights & Biases (training metrics), Loguru (battle logs) |
-| **Infrastructure** | NVIDIA A100 80GB (training), Python REST API (game server) |
-
----
-
-## 🔥 Unique Innovation
-
-### GRPO + Offline Physics Simulator = RL Without an Environment
-
-Traditional game-playing RL requires running the environment thousands of times. We bypass this entirely:
-
-1. **Offline reward computation** — Our reward function contains a complete physics engine replica. When the model proposes `{angle: 45, power: 80}`, we simulate the full parabolic trajectory in pure Python — gravity, sub-steps, collision detection — and return a reward proportional to proximity-to-enemy. No server calls, no game ticks.
-
-2. **GRPO over PPO** — By generating multiple candidate actions per state and using relative ranking (not absolute value estimation), GRPO provides stable training signal even with noisy physics rewards.
-
-3. **Continuous reward shaping** — Instead of binary hit/miss, our reward function provides a smooth gradient:
-   - Direct hit: **+5.0 to +11.0** (scaled by damage dealt)
-   - Near miss (<6 units): **+5.0** base
-   - Far miss: **−5.0 to +2.0** (linear distance penalty)
-
-   This gives the model a clear learning signal at every distance.
-
-4. **Tiny model, real reasoning** — Ministral 3B (1.72% trainable parameters via LoRA) learns to estimate distances from ASCII art, calculate appropriate angles, and adjust power — skills that typically require models 10× its size.
-
----
-
-## ⚔️ Challenges & Learnings
-
-| Challenge | How We Solved It |
-|-----------|-----------------|
-| **LLMs can't parse ASCII spatially** | Designed a compact renderer with column rulers and stripped formatting to minimize noise |
-| **Reward signal too sparse** | Replaced binary hit/miss with continuous distance-based reward shaping (gradient from −5 to +11) |
-| **Training instability with physics rewards** | Used GRPO's relative ranking instead of absolute value estimation; added format reward as a stabilizer |
-| **Model outputting invalid JSON** | Added a structural reward (+1.0 for valid format) that the model learns before strategy — curriculum-style |
-| **Terrain randomization causing reward variance** | Generated 1000+ diverse scenarios with random terrain phases, ensuring the model generalizes rather than memorizes |
-| **Sub-step collision detection** | Implemented 8 sub-steps per physics tick to prevent projectiles from tunneling through terrain |
-
----
-
-## 📊 Impact & Use Cases
-
-### Who Benefits?
-
-- **AI Researchers** — A reproducible benchmark for evaluating spatial reasoning in small language models
-- **Game AI Developers** — Demonstrates that RL can train LLM-based game agents without environment interaction during training
-- **Mistral Ecosystem** — Showcases fine-tuning Ministral 3B with GRPO for non-trivial reasoning tasks beyond text
-
-### Broader Implications
-
-This approach generalizes beyond games. Any domain where:
-- A **physics simulator** can evaluate actions offline
-- The task requires **spatial/numerical reasoning**
-- **Small models** need to match large model performance
-
-...can use this pattern. Think: robotics pre-training, autonomous navigation planning, engineering design optimization.
-
----
-
-## 🚀 Future Scope
-
-- **🏆 ELO Rating System** — Track model improvement across training checkpoints with proper statistical ranking
-- **🌊 Wind & Weather** — Add environmental variables (wind speed, wind direction) to increase reasoning complexity
-- **🤖 Multi-Agent GRPO** — Train both tanks simultaneously with self-play, creating an arms race of improving strategies
-- **📈 Curriculum Learning** — Start with easy scenarios (close range, flat terrain) and progressively increase difficulty
-- **🔬 Ablation Studies** — Measure contribution of each reward component, LoRA rank, and dataset size
-- **🌐 Web UI** — Browser-based game viewer with WebSocket streaming for demo accessibility
-- **📱 Edge Deployment** — Quantize the fine-tuned model to INT4 and deploy on consumer GPUs / mobile devices
-
----
-
-## 🎥 Demo
-
-| Resource | Link |
-|----------|------|
-| **GitHub Repository** | [github.com/yogesh1801/mistral-hackathon](https://github.com/yogesh1801/mistral-hackathon) |
-| **Fine-tuned Model** | [🤗 yogesh1801/ministral-3b-grpo-ascii-tanks](https://huggingface.co/yogesh1801/ministral-3b-grpo-ascii-tanks-merged) |
-| **Training Dataset** | Included in repo (`ascii_tanks_grpo_dataset.jsonl`) |
-
-### Quick Start
-
-```bash
-# 1. Clone & install
-git clone https://github.com/yogesh1801/mistral-hackathon.git
-cd mistral-hackathon
-pip install -r requirements.txt
-
-# 2. Start the game server
-python server.py
-
-# 3. Watch the live battle (in a wide terminal)
-curl -N localhost:3001/stream
-
-# 4. Launch LLM vs LLM combat
-export MISTRAL_API_KEY="your_key_here"
-python llm_battle.py --matches 5 --turns 20
-```
-
----
-
-## 👥 Team
-
-### Team Pivot
-
-| Member | Role |
-|--------|------|
-| **Yogesh Singla** | Game engine, GRPO training pipeline, reward function design |
-| **Simran Srivastava** | LLM battle orchestration, prompt engineering, evaluation |
-
----
-
 <p align="center">
   <i>Built with 🎯 at the Mistral AI Hackathon — proving that small models can learn big physics.</i>
 </p>
-

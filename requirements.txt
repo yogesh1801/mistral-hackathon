@@ -1,0 +1,6 @@
+flask
+mistralai
+loguru
+requests
+datasets
+openai

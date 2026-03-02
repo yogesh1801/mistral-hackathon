@@ -18,6 +18,10 @@ Over a 20-match series, the baseline results were:
 - **Ministral 3B**: 4 Wins
 - **Draws**: 1
 
+**Average Performance (Ministral 3B):**
+- Average Damage Given per match: **19.25**
+- Average Damage Taken per match: **44.65**
+
 For a detailed turn-by-turn breakdown, see [`battle_logs/unfinetuned_llm_battle.log`](battle_logs/unfinetuned_llm_battle.log). Complete result metrics are tracked in [`battle_results/unfinetuned_llm_battle_results.csv`](battle_results/unfinetuned_llm_battle_results.csv).
 
 ### 🎥 Unfinetuned Battle Video
@@ -83,6 +87,17 @@ In the new 20-match series, the results improved dramatically:
 - **Mistral Small**: 10 Wins
 - **Ministral 3B (Fine-Tuned)**: 10 Wins 
 - **Draws**: 0
+
+**Average Performance (Ministral 3B):**
+- Average Damage Given per match: **34.75** *(+80.5% improvement)*
+- Average Damage Taken per match: **34.45** *(-22.8% reduction)*
+
+### 🚀 Overall Improvement Summary
+| Metric | Pre-Finetuning | Post-Finetuning (GRPO) | Net Improvement |
+|--------|----------------|-------------------------|-----------------|
+| **Win Rate** | 20% | **50%** | **+150.0%** |
+| **Avg. Damage Given** | 19.25 | **34.75** | **+80.5%** |
+| **Avg. Damage Taken** | 44.65 | **34.45** | **-22.8%** |
 
 The 3B model learned to accurately estimate distances, calculate parabolic trajectories, and directly hit targets, matching the win rate of a model significantly larger than itself! Dive into the logs in [`battle_logs/finetuned_llm_battle.log`](battle_logs/finetuned_llm_battle.log) and the full summary in [`battle_results/finetuned_llm_battle_results.csv`](battle_results/finetuned_llm_battle_results.csv).
 

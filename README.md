@@ -26,6 +26,45 @@ For a detailed turn-by-turn breakdown, see [`battle_logs/unfinetuned_llm_battle.
 ## 🧠 Our Moat: Deep Spatial Intuition from Pure Text
 Our unique innovation—and **our biggest moat**—is that **we strictly rely on text models, using zero visual or multi-modal capabilities.** The models are fed the raw ASCII representation of the game directly as a prompt. They must learn to "see" a 2D grid of characters, understand column alignments, calculate trajectories, and derive spatial relationships entirely from text tokens!
 
+Here is an example of what the model actually "sees" and has to reason over:
+
+```text
+=== YOUR TURN ===
+You are [A] Ministral 3B
+  HP: 100  |  Angle: 45  |  Power: 50  |  Fuel: 20
+Enemy [B] Mistral Small
+  HP: 100
+
+=== BATTLEFIELD ===
+
+           +
+
+         [A]
+██   ██████   ████
+███ ████████ ██████     ██
+████████████████████   ███
+█████████████████████ █████
+███████████████████████████
+████████████████████████████    ██
+█████████████████████████████  ████
+███████████████████████████████████
+████████████████████████████████████
+█████████████████████████████████████    ██
+█████████████████████████████████████  ████
+████████████████████████████████████████████
+████████████████████████████████████████████
+█████████████████████████████████████████████    ██
+██████████████████████████████████████████████  ████
+████████████████████████████████████████████████████                 +
+█████████████████████████████████████████████████████     ██
+██████████████████████████████████████████████████████   ████      █ [B]   ██
+████████████████████████████████████████████████████████████████████████████████
+████████████████████████████████████████████████████████████████████████████████
+0·········1·········2·········3·········4·········5·········6·········7·········
+
+Respond ONLY with a JSON object: { "move": <int>, "angle": <int>, "power": <int> }
+```
+
 To teach the 3B model this intricate spatial reasoning without relying on expensive human-labeled data or visual inputs, we used **GRPO (Group Relative Policy Optimization)** paired with an **offline physics simulator**. 
 
 1. **Dataset Generation**: We ran `generate_dataset.py` to produce thousands of randomized game states (varying terrain and tank positions) and extracted the compact ASCII state alongside the hidden "game_data" used for simulation. You can explore the data we generated here: [**ASCII Tanks Offline Dataset on HuggingFace**](https://huggingface.co/datasets/yogesh1801/ascii-tanks-offline-dataset).

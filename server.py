@@ -693,8 +693,11 @@ def stream():
         mimetype='text/plain; charset=utf-8',
         headers={
             'X-Content-Type-Options': 'nosniff',
-            'Cache-Control': 'no-cache',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Transfer-Encoding': 'chunked',
+            # Disable proxy buffering (Railway, nginx, etc.) so stream is immediate
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive',
         }
     )
 
